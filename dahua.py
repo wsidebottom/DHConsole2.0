@@ -1,5 +1,5 @@
 import copy
-
+import requests
 from Crypto.PublicKey import RSA
 from OpenSSL import crypto
 from pathlib import Path
@@ -26,22 +26,24 @@ class DahuaFunctions(Network):
         self.timeout = timeout
         self.udp_server = udp_server
         self.args = dargs
-
         self.debug = dargs.debug
         self.debugCalls = dargs.calls				# Some internal debugging
-
         self.fuzzServiceDB = {}				# Used when fuzzing services
-
         self.DeviceType = '(null)'
-
         self.networkSnifferPath = None
         self.networkSnifferID = None
         self.dh_sniffer_nic = None
-
+        self.dh_realm = self.get_dh_realm()        # Initialize dh_realm
         self.attach_only = []
         self.Attach = []
         self.fuzz_factory = []
 
+    
+    def get_dh_realm(self):
+        # Placeholder method to retrieve dh_realm
+        # Replace this with the actual implementation to get the realm value
+        # For example, it might be retrieved from a configuration or another API call
+        return "your_dh_realm_value"
     #
     # Send command to remote console, if not attached just ignore sending
     #
