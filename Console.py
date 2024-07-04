@@ -47,18 +47,9 @@ class DebugConsole(Servers):
         # Additional Cmd list
         #
         cmd_list = {
-            'add_user': {
-                'cmd': lambda username, password, role: self.user_manager.add_user(username, password, role),
-                'help': 'Add a new user (add_user new-user n3wp4ssw0rd role'
-            },
-            'modify_password': {
-                'cmd': lambda username, new_password: self.user_manager.modify_password(username, new_password),
-                'help': 'Modify the password of an existing user'
-            },
-            'delete_user': {
-                'cmd': lambda username: self.user_manager.delete_user(username),
-                'help': 'Delete an existing user'
-            },
+            'add_user': lambda args: self.user_manager.add_user(*args),
+            'modify_password': lambda args: self.user_manager.modify_password(*args),
+            'delete_user': lambda args: self.user_manager.delete_user(*args),
             'certificate': {
                 'cmd': 'self.dh.get_remote_info("certificate")',
                 'help': 'Dump some information of remote certificate',
@@ -238,10 +229,10 @@ class DebugConsole(Servers):
         #
         while True:
             try:
-                user_input = input("Enter command: ")
+                user_input = input("Enter command: ").strip()
                 if user_input in cmd_list:
-                    args = input("Enter arguments: ").split()
-                    cmd_list[user_input]['cmd'](*args)
+                    args = input("Enter arguments: ").strip().split()
+                    cmd_list[user_input](args)
                 else:
                     print(f"Unknown command: {user_input}")
             except Exception as e:
