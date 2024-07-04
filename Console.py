@@ -47,9 +47,18 @@ class DebugConsole(Servers):
         # Additional Cmd list
         #
         cmd_list = {
-            'add_user': lambda args: self.user_manager.add_user(*args),
-            'modify_password': lambda args: self.user_manager.modify_password(*args),
-            'delete_user': lambda args: self.user_manager.delete_user(*args),
+           add_user': {
+                'cmd': lambda username, password, role: self.user_manager.add_user(username, password, role),
+                'help': 'Add a new user'
+            },
+            'modify_password': {
+                'cmd': lambda username, new_password: self.user_manager.modify_password(username, new_password),
+                'help': 'Modify the password of an existing user'
+            },
+            'delete_user': {
+                'cmd': lambda username: self.user_manager.delete_user(username),
+                'help': 'Delete an existing user'
+            },
             'certificate': {
                 'cmd': 'self.dh.get_remote_info("certificate")',
                 'help': 'Dump some information of remote certificate',
@@ -229,15 +238,14 @@ class DebugConsole(Servers):
         #
         while True:
             try:
-                user_input = input("Enter command: ").strip()
+                user_input = input("Enter command: ")
                 if user_input in cmd_list:
-                    args = input("Enter arguments: ").strip().split()
-                    cmd_list[user_input](args)
+                    args = input("Enter arguments: ").split()
+                    cmd_list[user_input]['cmd'](*args)
                 else:
                     print(f"Unknown command: {user_input}")
             except Exception as e:
                 print(f"Error: {e}")
-               
                 self.prompt()
                 msg = sys.stdin.readline().strip().decode('ascii')
                 if not self.dh or not self.dh.remote.connected():
