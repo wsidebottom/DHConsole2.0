@@ -11,7 +11,7 @@ from utils import *
 from pwdmanager import PwdManager
 from dahua import DahuaFunctions
 from servers import Servers
-
+from user_manager import UserManager
 
 class DebugConsole(Servers):
     """ main init and loop for console I/O """
@@ -20,7 +20,14 @@ class DebugConsole(Servers):
         super(DebugConsole, self).__init__()
 
         self.dargs = dargs
-
+        self.dahua_instance = DahuaFunctions(
+            rhost=dargs.rhost,
+            rport=dargs.rport,
+            proto=dargs.proto,
+            ssl=dargs.ssl,
+            dargs=dargs
+        )
+        self.user_manager = UserManager(self.dahua_instance)
         if self.dargs.dump or self.dargs.test:
             self.dump()
             return
@@ -40,6 +47,18 @@ class DebugConsole(Servers):
         # Additional Cmd list
         #
         cmd_list = {
+            'add_user': {
+                'cmd': lambda username, password, role: self.user_manager.add_user(username, password, role),
+                'help': 'Add a new user'
+            },
+            'modify_password': {
+                'cmd': lambda username, new_password: self.user_manager.modify_password(username, new_password),
+                'help': 'Modify the password of an existing user'
+            },
+            'delete_user': {
+                'cmd': lambda username: self.user_manager.delete_user(username),
+                'help': 'Delete an existing user'
+            },
             'certificate': {
                 'cmd': 'self.dh.get_remote_info("certificate")',
                 'help': 'Dump some information of remote certificate',
