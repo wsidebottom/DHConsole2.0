@@ -47,7 +47,7 @@ class DebugConsole(Servers):
         # Additional Cmd list
         #
         cmd_list = {
-           add_user': {
+           'add_user': {
                 'cmd': lambda username, password, role: self.user_manager.add_user(username, password, role),
                 'help': 'Add a new user'
             },
