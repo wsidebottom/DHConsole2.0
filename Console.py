@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 """
-Author: bashis <mcw noemail eu> 2019-2021
-Subject: Dahua Debug Console
+Author: 0v3rl4p82 - 2024
+Subject: Dahua Debug Console with Users Management
 """
 import argparse
 import _thread
@@ -49,7 +49,7 @@ class DebugConsole(Servers):
         cmd_list = {
             'add_user': {
                 'cmd': lambda username, password, role: self.user_manager.add_user(username, password, role),
-                'help': 'Add a new user'
+                'help': 'Add a new user (add_user new-user n3wp4ssw0rd role'
             },
             'modify_password': {
                 'cmd': lambda username, new_password: self.user_manager.modify_password(username, new_password),
