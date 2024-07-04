@@ -238,14 +238,6 @@ class DebugConsole(Servers):
         #
         while True:
             try:
-                user_input = input("Enter command: ")
-                if user_input in cmd_list:
-                    args = input("Enter arguments: ").split()
-                    cmd_list[user_input]['cmd'](*args)
-                else:
-                    print(f"Unknown command: {user_input}")
-            except Exception as e:
-                print(f"Error: {e}")
                 self.prompt()
                 msg = sys.stdin.readline().strip().decode('ascii')
                 if not self.dh or not self.dh.remote.connected():
