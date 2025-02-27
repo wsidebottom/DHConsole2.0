@@ -11,7 +11,6 @@ from utils import *
 from pwdmanager import PwdManager
 from dahua import DahuaFunctions
 from servers import Servers
-from user_manager import UserManager
 
 class DebugConsole(Servers):
     """ main init and loop for console I/O """
@@ -27,7 +26,7 @@ class DebugConsole(Servers):
             ssl=dargs.ssl,
             dargs=dargs
         )
-        self.user_manager = UserManager(self.dahua_instance)
+
         if self.dargs.dump or self.dargs.test:
             self.dump()
             return
@@ -47,17 +46,29 @@ class DebugConsole(Servers):
         # Additional Cmd list
         #
         cmd_list = {
-           'add_user': {
-                'cmd': lambda username, password, role: self.user_manager.add_user(username, password, role),
+           'testing': {
+                'cmd': 'self.dh.testing(msg)',
+                'help': 'testing'
+            },
+           'user_add': {
+                'cmd': 'self.dh.user_add(msg)',
                 'help': 'Add a new user'
             },
-            'modify_password': {
-                'cmd': lambda username, new_password: self.user_manager.modify_password(username, new_password),
+            'user_modify': {
+                'cmd': 'self.dh.user_modify(msg)',
                 'help': 'Modify the password of an existing user'
             },
-            'delete_user': {
-                'cmd': lambda username: self.user_manager.delete_user(username),
+            'user_delete': {
+                'cmd': 'self.dh.user_delete(msg)',
                 'help': 'Delete an existing user'
+            },
+            'users_list': {
+                'cmd': 'self.dh.users_list()',
+                'help': 'List all Users'
+            },
+            'onvif_users_list': {
+                'cmd': 'self.dh.onvif_users_list()',
+                'help': 'List all ONVIF Users'
             },
             'certificate': {
                 'cmd': 'self.dh.get_remote_info("certificate")',
@@ -239,7 +250,7 @@ class DebugConsole(Servers):
         while True:
             try:
                 self.prompt()
-                msg = sys.stdin.readline().strip().decode('ascii')
+                msg = sys.stdin.readline().strip()
                 if not self.dh or not self.dh.remote.connected():
                     log.failure('No available instance')
                     return False
@@ -813,7 +824,7 @@ def main():
     parser.add_argument('--dump_argv', required=False, default=None, type=str, help='ARGV to --dump')
     parser.add_argument('--test', required=False, default=False, action='store_true', help='test w/o login attempt')
     parser.add_argument(
-        '--multihost', required=False, default=False, action='store_true', help='Connect hosts from "dhConsole.json"'
+        '--multihost', required=False, default=True, action='store_true', help='Connect hosts from "dhConsole.json"'
     )
     parser.add_argument(
         '--save', required=False, default=False, action='store_true', help='Save host hash to "dhConsole.json"'
@@ -831,8 +842,8 @@ def main():
     dargs = parser.parse_args()
 
     """ We want at least one argument, so print out help """
-    if len(sys.argv) == 1:
-        parser.parse_args(['-h'])
+    #if len(sys.argv) == 1:
+    #    parser.parse_args(['-h'])
 
     log.info(banner)
 

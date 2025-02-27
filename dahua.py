@@ -7,6 +7,7 @@ from pathlib import Path
 """ Local imports """
 from utils import *
 from net import Network
+from pwdmanager import dahua_gen2_md5_hash
 
 
 class DahuaFunctions(Network):
@@ -193,7 +194,7 @@ class DahuaFunctions(Network):
                 log.failure('[listService] (save) Empty')
             if not len(cmd) == 1:
                 if len(cache):
-                    print(json.dumps(cache, indent=4))
+                    print(json.dumps(cache, indent=2))
                 else:
                     log.failure('[listService] (cache) Empty')
 
@@ -355,7 +356,7 @@ class DahuaFunctions(Network):
         if len(cmd) == 4 and cmd[2] == 'save':
             return self.save_to_file(file_name=cmd[3], dh_data=dh_data)
 
-        print(json.dumps(dh_data, indent=4))
+        print(json.dumps(dh_data, indent=2))
 
         return
 
@@ -580,8 +581,8 @@ class DahuaFunctions(Network):
             "global.logout",
             "global.keepAlive",
             "global.setCurrentTime",
-            "DockUser.addUser",
-            "DockUser.modifyPassword",
+            #"DockUser.addUser",
+            #"DockUser.modifyPassword",
             "configManager.detach",
             "configManager.exportPackConfig",  # Exporting config in encrypted TGZ
             "configManager.secGetDefault",
@@ -879,8 +880,8 @@ class DahuaFunctions(Network):
                                 )
 
                 self.instance_service(method_name="", list_all=True)
-                # print(json.dumps(fuzz_result,indent=4))
-                # print(json.dumps(self.fuzzDB,indent=4))
+                # print(json.dumps(fuzz_result,indent=2))
+                # print(json.dumps(self.fuzzDB,indent=2))
                 # self.fuzzServiceDB = {} # Reset
                 return
 
@@ -1100,7 +1101,7 @@ class DahuaFunctions(Network):
 
             if dh_data.get('CertManager.getSvrCertInfo').get('result'):
                 log.success("\033[92m[\033[91mServer Certificate\033[92m]\033[0m\n{}".format(
-                    json.dumps(dh_data.get('CertManager.getSvrCertInfo'), indent=4),
+                    json.dumps(dh_data.get('CertManager.getSvrCertInfo'), indent=2),
                 ))
 
         elif cmd[0] == 'dhp2p':
@@ -1197,7 +1198,7 @@ class DahuaFunctions(Network):
         dh_data = self.send_call(query_args)
         if not dh_data:
             return
-        print(json.dumps(dh_data, indent=4))
+        print(json.dumps(dh_data, indent=2))
 
     def new_config(self, msg):
         """
@@ -1235,7 +1236,7 @@ class DahuaFunctions(Network):
                 "object": object_id,
             }
             if cmd[1] == 'show':
-                print(json.dumps(query_args, indent=4))
+                print(json.dumps(query_args, indent=2))
                 return
 
             log.info("query: {} ".format(query_args))
@@ -1243,7 +1244,7 @@ class DahuaFunctions(Network):
             dh_data = self.send_call(query_args)
             if not dh_data:
                 return
-            print(json.dumps(dh_data, indent=4))
+            print(json.dumps(dh_data, indent=2))
 
         elif cmd[1] == 'get':
             query_args = {
@@ -1260,7 +1261,7 @@ class DahuaFunctions(Network):
             if not dh_data:
                 return
 
-            print(json.dumps(dh_data, indent=4))
+            print(json.dumps(dh_data, indent=2))
 
         elif cmd[1] == 'del':
             query_args = {
@@ -1277,7 +1278,7 @@ class DahuaFunctions(Network):
             if not dh_data:
                 return
 
-            print(json.dumps(dh_data, indent=4))
+            print(json.dumps(dh_data, indent=2))
 
         else:
             log.info('{}'.format(help_all(msg=msg, usage=usage)))
@@ -1570,7 +1571,7 @@ class DahuaFunctions(Network):
         if not dh_data:
             return False
         if dh_data.get('result'):
-            print(json.dumps(dh_data, indent=4))
+            print(json.dumps(dh_data, indent=2))
         elif not dh_data.get('result'):
             log.failure('Error: {}'.format(dh_data.get('error')))
 
@@ -1638,7 +1639,7 @@ class DahuaFunctions(Network):
             if not dh_data:
                 log.failure(color("{}: {}".format(query_args.get('method'), dh_data), LRED))
                 return False
-            # print(json.dumps(dh_data,indent=4))
+            # print(json.dumps(dh_data,indent=2))
 
             if not dh_data.get('result'):
                 log.failure(color("{}: {}".format(query_args.get('method'), dh_data), LRED))
@@ -2068,7 +2069,7 @@ class DahuaFunctions(Network):
         # Should need to have events subscribed
         #
         if callback:
-            print(json.loads(msg, indent=4))
+            print(json.loads(msg, indent=2))
             return True
 
         cmd = msg.split()
@@ -2327,7 +2328,7 @@ class DahuaFunctions(Network):
                 }
 
                 dh_data = self.send_call(query_args, multicall=True, multicallsend=True)
-                # print(json.dumps(dh_data,indent=4))
+                # print(json.dumps(dh_data,indent=2))
 
                 net_data_stat = dh_data.get('netApp.getNetDataStat').get('params')
                 net_resource_stat = dh_data.get('netApp.getNetResourceStat').get('params')
@@ -2620,4 +2621,200 @@ class DahuaFunctions(Network):
         return
 
     def dh_test(self, msg):
+        return
+
+    def user_add(self, msg):
+        cmd = msg.split()
+
+        if len(cmd) != 4:
+            log.failure('Usage: user_add <username> <password> <group>')
+            return False
+
+        username = cmd[1]
+        password = cmd[2]
+        group = cmd[3]
+
+        # Log the operation
+        print(f"Adding user {username} in group {group}")
+
+        if not self.dh_realm:
+            log.failure(f'[user_add] no realm exist ({self.dh_realm})')
+            return False
+
+        query_args = {
+            'method': 'userManager.getGroupInfoAll',
+            'params': {},
+        }
+        dh_data = self.send_call(query_args, errorcodes=True)
+
+        authority_list = next((gp for gp in dh_data["params"] if gp["Name"] == group), None)
+        if not authority_list:
+            log.failure(f"Error: [user_add] User group '{group}' not found.")
+            return False
+
+        dh_hash = dahua_gen2_md5_hash(
+            dh_realm=self.dh_realm, username=username, password=password, return_hash=True
+        )
+
+        query_args = {
+            'method': 'userManager.addUser',
+            'params': {
+                'user': {
+                    'AuthorityList': authority_list['AuthorityList'],
+                    'Group': group,
+                    'Memo': username,
+                    'Name': username,
+                    'Password': dh_hash,
+                },
+            },
+        }
+        dh_data = self.send_call(query_args, errorcodes=True)
+        if dh_data.get('result'):
+            log.success('Success')
+            return True
+        else:
+            log.failure(f'Failed: Does user {username} already exist?')
+            return False
+
+    def user_modify(self, msg):
+        cmd = msg.split()
+
+        if len(cmd) != 3:
+            log.failure('Usage: user_modify <username> <password>')
+            return False
+
+        username = cmd[1]
+        password = cmd[2]
+
+        # Log the operation
+        print(f"Modifying user {username}")
+
+        if not self.dh_realm:
+            log.failure(f'[user_modify] no realm exist ({self.dh_realm})')
+            return False
+
+        query_args = {
+            'method': 'userManager.getAuthorityList',
+            'params': None,
+        }
+        dh_data = self.send_call(query_args, errorcodes=True)
+        authority_list = dh_data.get('params')
+
+        dh_hash = dahua_gen2_md5_hash(
+            dh_realm=self.dh_realm, username=username, password=password, return_hash=True
+        )
+
+        query_args = {
+            'method': 'userManager.modifyPasswordByManager',
+            'params': {
+                'user': {
+                    'name': username,
+                    'pwd': dh_hash,
+                    'nameManager': 'admin',
+                    'pwdManager': '',
+                    'accountType': 'admin',
+                },
+            },
+        }
+        dh_data = self.send_call(query_args, errorcodes=True)
+        if dh_data.get('result'):
+            log.success('Success')
+            return True
+        else:
+            log.failure(f'Failed: Does user {username} actually exist?')
+            return False
+
+    def user_delete(self, msg):
+        cmd = msg.split()
+
+        if len(cmd) != 2:
+            log.failure('Usage: user_delete <username>')
+            return False
+
+        username = cmd[1]
+
+        # Log the operation
+        print(f"Deleting user {username}")
+
+        if not self.dh_realm:
+            log.failure(f'[user_delete] no realm exist ({self.dh_realm})')
+            return False
+
+        query_args = {
+            'method': 'userManager.deleteUser',
+            'params': {
+                'name':  username,
+            },
+        }
+        dh_data = self.send_call(query_args, errorcodes=True)
+        if dh_data.get('result'):
+            log.success('Success')
+            return True
+        else:
+            log.failure('Failed: User already exist?')
+            return False
+
+    def users_list(self):
+        # Get all user information
+        query_args = {
+            "method": "userManager.getUserInfoAll",
+            "params": {
+                "name": "",
+            },
+        }
+
+        dh_data = self.send_call(query_args, errorcodes=True)
+        if not dh_data or not dh_data.get('result'):
+            log.failure('[users_list] Error: {}'.format(dh_data.get('error') if dh_data else False))
+            return False
+
+        dh_data.pop('id')
+        dh_data.pop('session')
+        dh_data.pop('result')
+
+        print(json.dumps(dh_data, indent=2))
+
+        return
+
+    def onvif_users_list(self):
+        # Get all user information
+        query_args = {
+            "method": "DockUser.getUserInfoAll",
+            "params": {
+                "name": "",
+            },
+        }
+
+        dh_data = self.send_call(query_args, errorcodes=True)
+        if not dh_data or not dh_data.get('result'):
+            log.failure('[onvif_users_list] Error: {}'.format(dh_data.get('error') if dh_data else False))
+            return False
+
+        dh_data.pop('id')
+        dh_data.pop('session')
+        dh_data.pop('result')
+
+        print(json.dumps(dh_data, indent=2))
+
+        return
+
+    def testing(self, msg):
+        cmd = msg.split()
+
+        query_args = {
+            "method": "userManager.getGroupInfoAll",
+            "params": {},
+        }
+
+        dh_data = self.send_call(query_args, errorcodes=True)
+        if not dh_data or not dh_data.get('result'):
+            log.failure('[testing] Error: {}'.format(dh_data.get('error') if dh_data else False))
+            return False
+
+        user_group = next((group for group in dh_data["params"] if group["Name"] == cmd[1]), None)
+        if user_group:
+            print(json.dumps(user_group, indent=2))
+        else:
+            print("User group not found.")
+
         return
